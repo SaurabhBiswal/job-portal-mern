@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <title>Employer Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
       margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
     }
 
     header {
@@ -19,70 +21,47 @@
       align-items: center;
     }
 
-    header h2 {
-      margin: 0;
-    }
-
     .logout-btn {
+      padding: 6px 16px;
       background: #ef4444;
-      border: none;
-      padding: 8px 14px;
       color: white;
+      border: none;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 14px;
     }
 
     .container {
+      padding: 20px;
       max-width: 900px;
-      margin: 30px auto;
+      margin: auto;
+    }
+
+    .card {
       background: white;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    }
-
-    h3 {
-      margin-top: 0;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 12px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-
-    button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .job {
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
       padding: 15px;
-      margin-top: 15px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
     }
 
-    .job b {
-      font-size: 16px;
+    input, select, textarea, button {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
     }
 
-    .meta {
-      color: #555;
-      font-size: 14px;
-      margin: 6px 0;
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #16a34a;
+      color: white;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-top: 4px;
     }
   </style>
 </head>
+
 <body>
 
 <header>
@@ -91,113 +70,57 @@
 </header>
 
 <div class="container">
-  <h3>Post a Job</h3>
 
-  <input id="title" placeholder="Job Title" />
-  <input id="location" placeholder="Location (e.g. Remote, Bangalore)" />
-  <input id="salary" placeholder="Salary (e.g. 6 LPA, 15k/month)" />
+  <div class="card">
+    <h3>Applicants (Resume Status)</h3>
+    <div id="applicants"></div>
+  </div>
 
-  <select id="type">
-    <option value="Full-time">Full-time</option>
-    <option value="Internship">Internship</option>
-    <option value="Remote">Remote</option>
-  </select>
-
-  <textarea id="description" placeholder="Job Description"></textarea>
-
-  <button onclick="postJob()">Post Job</button>
-
-  <hr style="margin:30px 0">
-
-  <h3>Your Posted Jobs</h3>
-  <div id="jobList"></div>
 </div>
 
 <script>
-  // 🔐 AUTH CHECK
-  const role = localStorage.getItem("role");
-  if (role !== "employer") {
-    window.location.href = "index.html";
+if (localStorage.getItem("role") !== "employer") {
+  window.location.href = "index.html";
+}
+
+let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+let applications = JSON.parse(localStorage.getItem("applications")) || [];
+
+function renderApplicants() {
+  applicants.innerHTML = "";
+
+  if (applications.length === 0) {
+    applicants.innerHTML = "<p>No applications yet.</p>";
+    return;
   }
 
-  // 📦 LOAD JOBS
-  function getJobs() {
-    return JSON.parse(localStorage.getItem("jobs")) || [];
-  }
+  applications.forEach(a => {
+    const job = jobs.find(j => j.id === a.jobId);
+    if (!job) return;
 
-  function saveJobs(jobs) {
-    localStorage.setItem("jobs", JSON.stringify(jobs));
-  }
+    applicants.innerHTML += `
+      <div class="card">
+        <strong>${job.title}</strong><br>
+        👤 ${a.seeker}<br>
+        <span class="badge">Resume Available</span><br>
+        📄 ${a.resumeName}
+      </div>
+    `;
+  });
+}
 
-  // ➕ POST JOB
-  function postJob() {
-    const title = document.getElementById("title").value.trim();
-    const location = document.getElementById("location").value.trim();
-    const salary = document.getElementById("salary").value.trim();
-    const type = document.getElementById("type").value;
-    const description = document.getElementById("description").value.trim();
+function logout() {
+  localStorage.removeItem("role");
+  localStorage.removeItem("username");
+  window.location.href = "index.html";
+}
 
-    if (!title || !location || !salary || !description) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    const jobs = getJobs();
-
-    const newJob = {
-      id: Date.now(),
-      title,
-      location,
-      salary,
-      type,
-      description
-    };
-
-    jobs.push(newJob);
-    saveJobs(jobs);
-
-    document.getElementById("title").value = "";
-    document.getElementById("location").value = "";
-    document.getElementById("salary").value = "";
-    document.getElementById("description").value = "";
-
-    renderJobs();
-  }
-
-  // 📋 RENDER JOBS
-  function renderJobs() {
-    const jobs = getJobs();
-    const jobList = document.getElementById("jobList");
-    jobList.innerHTML = "";
-
-    if (jobs.length === 0) {
-      jobList.innerHTML = "<p>No jobs posted yet.</p>";
-      return;
-    }
-
-    jobs.forEach(job => {
-      jobList.innerHTML += `
-        <div class="job">
-          <b>${job.title}</b>
-          <div class="meta">📍 ${job.location} | 💰 ${job.salary} | ${job.type}</div>
-          <div>${job.description}</div>
-        </div>
-      `;
-    });
-  }
-
-  // 🚪 LOGOUT
-  function logout() {
-    localStorage.removeItem("role");
-    localStorage.removeItem("username");
-    window.location.href = "index.html";
-  }
-
-  renderJobs();
+renderApplicants();
 </script>
 
 </body>
 </html>
+
 
 
 
