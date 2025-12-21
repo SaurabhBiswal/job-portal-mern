@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <title>Job Seeker Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f4f6f8;
+      background: #f1f5f9;
     }
 
+    /* HEADER */
     header {
       background: #2563eb;
       color: white;
@@ -20,24 +23,20 @@
     }
 
     .logout-btn {
-  width: auto;          /* 🔥 MOST IMPORTANT */
-  padding: 6px 14px;
-  font-size: 14px;
-  background: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
+      width: auto !important;
+      padding: 6px 16px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
 
-.logout-btn:hover {
-  background: #dc2626;
-}
-
-
+    /* LAYOUT */
     .container {
       display: grid;
-      grid-template-columns: 250px 300px 1fr 300px;
+      grid-template-columns: 1fr 1.2fr 2fr 1.5fr;
       gap: 20px;
       padding: 20px;
     }
@@ -45,8 +44,8 @@
     .card {
       background: white;
       padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
     }
 
     h3 {
@@ -57,35 +56,45 @@
       width: 100%;
       padding: 8px;
       margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .search-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .clear-btn {
+      background: #e5e7eb;
+      border: none;
+      cursor: pointer;
     }
 
     .job {
-      border-bottom: 1px solid #ddd;
+      border-bottom: 1px solid #e5e7eb;
       padding: 10px 0;
-    }
-
-    .job:last-child {
-      border-bottom: none;
     }
 
     .apply-btn {
       background: #16a34a;
       color: white;
       border: none;
-      padding: 6px 10px;
-      border-radius: 4px;
+      padding: 6px 12px;
+      border-radius: 5px;
       cursor: pointer;
+      margin-top: 5px;
     }
 
-    .applied-btn {
-      background: gray;
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      border-radius: 4px;
+    .applied {
+      background: #9ca3af;
+      cursor: not-allowed;
     }
   </style>
 </head>
+
 <body>
 
 <header>
@@ -104,173 +113,152 @@
   <!-- SEARCH -->
   <div class="card">
     <h3>Search Jobs</h3>
-
-    <input type="text" id="searchInput" placeholder="Search by title or skill">
-
-    <select id="locationFilter">
-      <option value="">All Locations</option>
-    </select>
-
-    <select id="typeFilter">
-      <option value="">All Job Types</option>
-      <option value="Full-time">Full-time</option>
-      <option value="Internship">Internship</option>
-      <option value="Remote">Remote</option>
-    </select>
-
-    <button onclick="applyFilters()">Search Jobs</button>
-    <button onclick="clearFilters()">Clear Filters</button>
+    <input type="text" id="keyword" placeholder="Search by title / skill" />
+    <select id="locationFilter"></select>
+    <select id="typeFilter"></select>
+    <button class="search-btn" onclick="applyFilters()">Search Jobs</button>
+    <button class="clear-btn" onclick="clearFilters()">Clear Filters</button>
   </div>
 
   <!-- AVAILABLE JOBS -->
   <div class="card">
     <h3>Available Jobs</h3>
-    <div id="jobsContainer"></div>
+    <div id="jobList"></div>
   </div>
 
   <!-- APPLIED JOBS -->
   <div class="card">
     <h3>Applied Jobs</h3>
-    <div id="appliedContainer"></div>
+    <div id="appliedJobs"></div>
   </div>
 
 </div>
 
 <script>
-/* ---------------- AUTH CHECK ---------------- */
-const username = localStorage.getItem("username");
+/* AUTH CHECK */
 const role = localStorage.getItem("role");
-
-if (!username || role !== "jobseeker") {
+if (role !== "jobseeker") {
   window.location.href = "index.html";
 }
 
-document.getElementById("username").innerText = username;
+document.getElementById("username").innerText =
+  localStorage.getItem("username") || "User";
 
-/* ---------------- DATA ---------------- */
+/* DATA */
 let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
-let applications = JSON.parse(localStorage.getItem("applications")) || [];
+let applied = JSON.parse(localStorage.getItem("appliedJobs")) || [];
 
-/* ---------------- INIT ---------------- */
-populateLocationFilter();
-renderJobs(jobs);
-renderAppliedJobs();
-
-/* ---------------- FUNCTIONS ---------------- */
-
-function populateLocationFilter() {
+/* FILTER DROPDOWNS (DYNAMIC) */
+function populateFilters() {
   const locationSet = new Set();
-  jobs.forEach(j => locationSet.add(j.location));
+  const typeSet = new Set();
 
-  const select = document.getElementById("locationFilter");
-  locationSet.forEach(loc => {
-    const opt = document.createElement("option");
-    opt.value = loc;
-    opt.textContent = loc;
-    select.appendChild(opt);
+  jobs.forEach(j => {
+    locationSet.add(j.location);
+    typeSet.add(j.type);
   });
+
+  const locSel = document.getElementById("locationFilter");
+  const typeSel = document.getElementById("typeFilter");
+
+  locSel.innerHTML = `<option value="">All Locations</option>`;
+  typeSel.innerHTML = `<option value="">All Job Types</option>`;
+
+  locationSet.forEach(l =>
+    locSel.innerHTML += `<option value="${l}">${l}</option>`
+  );
+  typeSet.forEach(t =>
+    typeSel.innerHTML += `<option value="${t}">${t}</option>`
+  );
 }
 
+/* RENDER JOBS */
 function renderJobs(list) {
-  const container = document.getElementById("jobsContainer");
-  container.innerHTML = "";
-
-  if (list.length === 0) {
-    container.innerHTML = "<p>No jobs found.</p>";
-    return;
-  }
+  const jobList = document.getElementById("jobList");
+  jobList.innerHTML = "";
 
   list.forEach(job => {
-    const applied = applications.some(
-      a => a.jobId === job.id && a.seeker === username
-    );
+    const isApplied = applied.some(a => a.id === job.id);
 
-    const div = document.createElement("div");
-    div.className = "job";
-    div.innerHTML = `
-      <b>${job.title}</b> (${job.type})<br>
-      📍 ${job.location} | 💰 ${job.salary}<br>
-      ${job.skills || ""}<br><br>
-      ${
-        applied
-          ? `<button class="applied-btn">Applied</button>`
-          : `<button class="apply-btn" onclick="applyJob(${job.id})">Apply</button>`
-      }
+    jobList.innerHTML += `
+      <div class="job">
+        <strong>${job.title}</strong> (${job.type})<br>
+        📍 ${job.location} | 💰 ${job.salary}<br>
+        <small>${job.description}</small><br>
+        <button class="apply-btn ${isApplied ? "applied" : ""}"
+          onclick="applyJob(${job.id})"
+          ${isApplied ? "disabled" : ""}>
+          ${isApplied ? "Applied" : "Apply"}
+        </button>
+      </div>
     `;
-    container.appendChild(div);
   });
 }
 
-function renderAppliedJobs() {
-  const container = document.getElementById("appliedContainer");
-  container.innerHTML = "";
+/* APPLY JOB */
+function applyJob(id) {
+  const job = jobs.find(j => j.id === id);
+  if (!job) return;
 
-  const myApps = applications.filter(a => a.seeker === username);
-
-  if (myApps.length === 0) {
-    container.innerHTML = "<p>No applications yet.</p>";
-    return;
-  }
-
-  myApps.forEach(a => {
-    const job = jobs.find(j => j.id === a.jobId);
-    if (!job) return;
-
-    const div = document.createElement("div");
-    div.className = "job";
-    div.innerHTML = `
-      <b>${job.title}</b><br>
-      📍 ${job.location} | 💰 ${job.salary}
-    `;
-    container.appendChild(div);
-  });
-}
-
-function applyJob(jobId) {
-  applications.push({
-    seeker: username,
-    jobId: jobId
-  });
-  localStorage.setItem("applications", JSON.stringify(applications));
+  applied.push(job);
+  localStorage.setItem("appliedJobs", JSON.stringify(applied));
   renderJobs(jobs);
-  renderAppliedJobs();
+  renderApplied();
 }
 
-function applyFilters() {
-  const keyword = document.getElementById("searchInput").value.toLowerCase();
-  const location = document.getElementById("locationFilter").value;
-  const type = document.getElementById("typeFilter").value;
-
-  let filtered = jobs.filter(j => {
-    const matchKeyword =
-      j.title.toLowerCase().includes(keyword) ||
-      (j.skills && j.skills.toLowerCase().includes(keyword));
-
-    const matchLocation = location === "" || j.location === location;
-    const matchType = type === "" || j.type === type;
-
-    return matchKeyword && matchLocation && matchType;
+/* APPLIED LIST */
+function renderApplied() {
+  const box = document.getElementById("appliedJobs");
+  box.innerHTML = "";
+  applied.forEach(j => {
+    box.innerHTML += `
+      <div class="job">
+        <strong>${j.title}</strong><br>
+        📍 ${j.location} | 💰 ${j.salary}
+      </div>
+    `;
   });
+}
+
+/* FILTER LOGIC */
+function applyFilters() {
+  const k = keyword.value.toLowerCase();
+  const loc = locationFilter.value;
+  const type = typeFilter.value;
+
+  const filtered = jobs.filter(j =>
+    (!k || j.title.toLowerCase().includes(k) || j.description.toLowerCase().includes(k)) &&
+    (!loc || j.location === loc) &&
+    (!type || j.type === type)
+  );
 
   renderJobs(filtered);
 }
 
 function clearFilters() {
-  document.getElementById("searchInput").value = "";
-  document.getElementById("locationFilter").value = "";
-  document.getElementById("typeFilter").value = "";
+  keyword.value = "";
+  locationFilter.value = "";
+  typeFilter.value = "";
   renderJobs(jobs);
 }
 
+/* LOGOUT */
 function logout() {
-  localStorage.removeItem("username");
   localStorage.removeItem("role");
+  localStorage.removeItem("username");
   window.location.href = "index.html";
 }
+
+/* INIT */
+populateFilters();
+renderJobs(jobs);
+renderApplied();
 </script>
 
 </body>
 </html>
+
+
 
 
 
