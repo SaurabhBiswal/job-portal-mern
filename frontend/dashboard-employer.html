@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Employer Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+    }
+
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h2 {
+      margin: 0;
+    }
+
+    .logout-btn {
+      background: #ef4444;
+      border: none;
+      padding: 8px 14px;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    h3 {
+      margin-top: 0;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .job {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .job b {
+      font-size: 16px;
+    }
+
+    .meta {
+      color: #555;
+      font-size: 14px;
+      margin: 6px 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h2>Employer Dashboard</h2>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+  <h3>Post a Job</h3>
+
+  <input id="title" placeholder="Job Title" />
+  <input id="location" placeholder="Location (e.g. Remote, Bangalore)" />
+  <input id="salary" placeholder="Salary (e.g. 6 LPA, 15k/month)" />
+
+  <select id="type">
+    <option value="Full-time">Full-time</option>
+    <option value="Internship">Internship</option>
+    <option value="Remote">Remote</option>
+  </select>
+
+  <textarea id="description" placeholder="Job Description"></textarea>
+
+  <button onclick="postJob()">Post Job</button>
+
+  <hr style="margin:30px 0">
+
+  <h3>Your Posted Jobs</h3>
+  <div id="jobList"></div>
+</div>
+
+<script>
+  // 🔐 AUTH CHECK
+  const role = localStorage.getItem("role");
+  if (role !== "employer") {
+    window.location.href = "index.html";
+  }
+
+  // 📦 LOAD JOBS
+  function getJobs() {
+    return JSON.parse(localStorage.getItem("jobs")) || [];
+  }
+
+  function saveJobs(jobs) {
+    localStorage.setItem("jobs", JSON.stringify(jobs));
+  }
+
+  // ➕ POST JOB
+  function postJob() {
+    const title = document.getElementById("title").value.trim();
+    const location = document.getElementById("location").value.trim();
+    const salary = document.getElementById("salary").value.trim();
+    const type = document.getElementById("type").value;
+    const description = document.getElementById("description").value.trim();
+
+    if (!title || !location || !salary || !description) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    const jobs = getJobs();
+
+    const newJob = {
+      id: Date.now(),
+      title,
+      location,
+      salary,
+      type,
+      description
+    };
+
+    jobs.push(newJob);
+    saveJobs(jobs);
+
+    document.getElementById("title").value = "";
+    document.getElementById("location").value = "";
+    document.getElementById("salary").value = "";
+    document.getElementById("description").value = "";
+
+    renderJobs();
+  }
+
+  // 📋 RENDER JOBS
+  function renderJobs() {
+    const jobs = getJobs();
+    const jobList = document.getElementById("jobList");
+    jobList.innerHTML = "";
+
+    if (jobs.length === 0) {
+      jobList.innerHTML = "<p>No jobs posted yet.</p>";
+      return;
+    }
+
+    jobs.forEach(job => {
+      jobList.innerHTML += `
+        <div class="job">
+          <b>${job.title}</b>
+          <div class="meta">📍 ${job.location} | 💰 ${job.salary} | ${job.type}</div>
+          <div>${job.description}</div>
+        </div>
+      `;
+    });
+  }
+
+  // 🚪 LOGOUT
+  function logout() {
+    localStorage.removeItem("role");
+    localStorage.removeItem("username");
+    window.location.href = "index.html";
+  }
+
+  renderJobs();
+</script>
+
+</body>
+</html>
+
+
+

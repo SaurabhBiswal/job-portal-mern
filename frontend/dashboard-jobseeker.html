@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Job Seeker Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+    }
+
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logout-btn {
+  width: auto;          /* 🔥 MOST IMPORTANT */
+  padding: 6px 14px;
+  font-size: 14px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+}
+
+
+    .container {
+      display: grid;
+      grid-template-columns: 250px 300px 1fr 300px;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    h3 {
+      margin-top: 0;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+
+    .job {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+
+    .job:last-child {
+      border-bottom: none;
+    }
+
+    .apply-btn {
+      background: #16a34a;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .applied-btn {
+      background: gray;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h2>Job Seeker Dashboard</h2>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+
+  <!-- PROFILE -->
+  <div class="card">
+    <h3>Welcome, <span id="username"></span></h3>
+    <p>Track jobs, apply smartly 🚀</p>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="card">
+    <h3>Search Jobs</h3>
+
+    <input type="text" id="searchInput" placeholder="Search by title or skill">
+
+    <select id="locationFilter">
+      <option value="">All Locations</option>
+    </select>
+
+    <select id="typeFilter">
+      <option value="">All Job Types</option>
+      <option value="Full-time">Full-time</option>
+      <option value="Internship">Internship</option>
+      <option value="Remote">Remote</option>
+    </select>
+
+    <button onclick="applyFilters()">Search Jobs</button>
+    <button onclick="clearFilters()">Clear Filters</button>
+  </div>
+
+  <!-- AVAILABLE JOBS -->
+  <div class="card">
+    <h3>Available Jobs</h3>
+    <div id="jobsContainer"></div>
+  </div>
+
+  <!-- APPLIED JOBS -->
+  <div class="card">
+    <h3>Applied Jobs</h3>
+    <div id="appliedContainer"></div>
+  </div>
+
+</div>
+
+<script>
+/* ---------------- AUTH CHECK ---------------- */
+const username = localStorage.getItem("username");
+const role = localStorage.getItem("role");
+
+if (!username || role !== "jobseeker") {
+  window.location.href = "index.html";
+}
+
+document.getElementById("username").innerText = username;
+
+/* ---------------- DATA ---------------- */
+let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+let applications = JSON.parse(localStorage.getItem("applications")) || [];
+
+/* ---------------- INIT ---------------- */
+populateLocationFilter();
+renderJobs(jobs);
+renderAppliedJobs();
+
+/* ---------------- FUNCTIONS ---------------- */
+
+function populateLocationFilter() {
+  const locationSet = new Set();
+  jobs.forEach(j => locationSet.add(j.location));
+
+  const select = document.getElementById("locationFilter");
+  locationSet.forEach(loc => {
+    const opt = document.createElement("option");
+    opt.value = loc;
+    opt.textContent = loc;
+    select.appendChild(opt);
+  });
+}
+
+function renderJobs(list) {
+  const container = document.getElementById("jobsContainer");
+  container.innerHTML = "";
+
+  if (list.length === 0) {
+    container.innerHTML = "<p>No jobs found.</p>";
+    return;
+  }
+
+  list.forEach(job => {
+    const applied = applications.some(
+      a => a.jobId === job.id && a.seeker === username
+    );
+
+    const div = document.createElement("div");
+    div.className = "job";
+    div.innerHTML = `
+      <b>${job.title}</b> (${job.type})<br>
+      📍 ${job.location} | 💰 ${job.salary}<br>
+      ${job.skills || ""}<br><br>
+      ${
+        applied
+          ? `<button class="applied-btn">Applied</button>`
+          : `<button class="apply-btn" onclick="applyJob(${job.id})">Apply</button>`
+      }
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderAppliedJobs() {
+  const container = document.getElementById("appliedContainer");
+  container.innerHTML = "";
+
+  const myApps = applications.filter(a => a.seeker === username);
+
+  if (myApps.length === 0) {
+    container.innerHTML = "<p>No applications yet.</p>";
+    return;
+  }
+
+  myApps.forEach(a => {
+    const job = jobs.find(j => j.id === a.jobId);
+    if (!job) return;
+
+    const div = document.createElement("div");
+    div.className = "job";
+    div.innerHTML = `
+      <b>${job.title}</b><br>
+      📍 ${job.location} | 💰 ${job.salary}
+    `;
+    container.appendChild(div);
+  });
+}
+
+function applyJob(jobId) {
+  applications.push({
+    seeker: username,
+    jobId: jobId
+  });
+  localStorage.setItem("applications", JSON.stringify(applications));
+  renderJobs(jobs);
+  renderAppliedJobs();
+}
+
+function applyFilters() {
+  const keyword = document.getElementById("searchInput").value.toLowerCase();
+  const location = document.getElementById("locationFilter").value;
+  const type = document.getElementById("typeFilter").value;
+
+  let filtered = jobs.filter(j => {
+    const matchKeyword =
+      j.title.toLowerCase().includes(keyword) ||
+      (j.skills && j.skills.toLowerCase().includes(keyword));
+
+    const matchLocation = location === "" || j.location === location;
+    const matchType = type === "" || j.type === type;
+
+    return matchKeyword && matchLocation && matchType;
+  });
+
+  renderJobs(filtered);
+}
+
+function clearFilters() {
+  document.getElementById("searchInput").value = "";
+  document.getElementById("locationFilter").value = "";
+  document.getElementById("typeFilter").value = "";
+  renderJobs(jobs);
+}
+
+function logout() {
+  localStorage.removeItem("username");
+  localStorage.removeItem("role");
+  window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+

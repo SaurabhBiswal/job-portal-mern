@@ -1,0 +1,88 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f7fb;
+}
+
+.header {
+  background: #2563eb;
+  color: white;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logout-btn {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr 1.5fr;
+  gap: 20px;
+  padding: 25px;
+}
+
+.card {
+  background: white;
+  padding: 18px;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+input, select {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+}
+
+button {
+  width: 100%;
+  padding: 8px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+button.secondary {
+  background: #6b7280;
+}
+
+.job {
+  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+}
+
+.job.small {
+  font-size: 14px;
+}
+
+.applied {
+  background: #9ca3af;
+}
+
+.tag {
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.muted {
+  color: #6b7280;
+}
+

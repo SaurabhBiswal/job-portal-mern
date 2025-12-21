@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Available Jobs</title>
+  <style>
+    body { font-family: Arial; background:#f4f6f8; padding:30px }
+    .job {
+      background:white;
+      padding:15px;
+      margin:15px 0;
+      border-radius:6px;
+    }
+    button {
+      padding:8px;
+      background:#28a745;
+      color:white;
+      border:none;
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Available Jobs</h2>
+<button onclick="goDash()">My Dashboard</button>
+<button onclick="logout()">Logout</button>
+
+<div id="jobs"></div>
+
+<script>
+const role = localStorage.getItem("role");
+if (role !== "SEEKER") {
+  alert("Access denied");
+  window.location.href = "index.html";
+}
+
+fetch("http://localhost:3000/jobs")
+.then(r => r.json())
+.then(data => {
+  jobs.innerHTML = data.map(j => `
+    <div class="job">
+      <h3>${j.title}</h3>
+      <p>${j.description}</p>
+      <p><b>Location:</b> ${j.location}</p>
+      <p><b>Salary:</b> ${j.salary}</p>
+      <button onclick="apply(${j.id})">Apply</button>
+    </div>
+  `).join("");
+});
+
+function apply(id) {
+  fetch(`http://localhost:3000/jobs/${id}/apply`, {
+    method:"POST",
+    headers:{Authorization:"Bearer "+localStorage.getItem("token")}
+  })
+  .then(() => {
+    alert("Applied successfully");
+    location.href = "dashboard-seeker.html";
+  });
+}
+
+
+function goDash() {
+  location.href = "dashboard-seeker.html";
+}
+
+function logout() {
+  localStorage.clear();
+  location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
+
+
+
+
+

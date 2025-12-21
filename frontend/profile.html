@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Profile</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+<body>
+
+<button class="nav-btn" onclick="goDashboard()">Dashboard</button>
+<button class="nav-btn" onclick="logout()">Logout</button>
+
+<h2>My Profile</h2>
+
+<input id="name" placeholder="Full Name">
+<input id="email" placeholder="Email">
+<input id="skills" placeholder="Java, Spring, SQL">
+
+<button onclick="save()">Save Profile</button>
+
+<script>
+const token = localStorage.getItem("token");
+if (!token) location.href = "index.html";
+
+fetch("http://localhost:3000/profile", {
+  headers: { Authorization: "Bearer " + token }
+})
+.then(r => r.json())
+.then(p => {
+  name.value = p.fullName || "";
+  email.value = p.email || "";
+  skills.value = p.skills || "";
+});
+
+function save() {
+  fetch("http://localhost:3000/profile", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({
+      fullName: name.value,
+      email: email.value,
+      skills: skills.value
+    })
+  })
+  .then(() => alert("Profile updated"));
+}
+
+function goDashboard() {
+  window.location.href = "dashboard-seeker.html";
+}
+</script>
+
+<script src="script.js"></script>
+</body>
+</html>
+
+
+

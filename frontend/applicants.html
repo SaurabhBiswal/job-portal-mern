@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Applicants</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+<body>
+
+<button onclick="history.back()">Back</button>
+<h2>Applicants</h2>
+
+<div id="applicants"></div>
+
+<script>
+const token = localStorage.getItem("token");
+const jobId = new URLSearchParams(location.search).get("jobId");
+
+fetch(`http://localhost:3000/jobs/${jobId}/applications`, {
+  headers: { Authorization: "Bearer " + token }
+})
+.then(r => r.json())
+.then(list => {
+  if (!list.length) {
+    applicants.innerHTML = "<p>No applicants yet</p>";
+    return;
+  }
+
+  applicants.innerHTML = list.map(a => `
+    <div class="card">
+      <p><b>Seeker:</b> ${a.seeker}</p>
+      <p><b>Applied:</b> ${new Date(a.appliedAt).toLocaleString()}</p>
+    </div>
+  `).join("");
+});
+</script>
+
+<script src="script.js"></script>
+</body>
+</html>
+
