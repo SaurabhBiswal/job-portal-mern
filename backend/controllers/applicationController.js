@@ -1,30 +1,51 @@
-const Application = require("../models/Application");
+const Application = require('../models/Application');
+const Job = require('../models/Job');
 
 exports.applyJob = async (req, res) => {
   try {
-    const jobId = req.params.jobId;
-    const userId = req.user.id;
+    const { jobId } = req.body;
+    const seekerId = req.user.id;
 
-    const alreadyApplied = await Application.findOne({
-      job: jobId,
-      applicant: userId,
-    });
+    if (!jobId) {
+      return res.status(400).json({ success: false, message: 'Job ID is required' });
+    }
 
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: 'Job not found' });
+    }
+
+    const alreadyApplied = await Application.findOne({ jobId, seekerId });
     if (alreadyApplied) {
-      return res.status(400).json({
-        message: "You have already applied for this job",
-      });
+      return res.status(400).json({ success: false, message: 'You have already applied to this job!' });
     }
 
     const application = new Application({
-      job: jobId,
-      applicant: userId,
+      jobId,
+      seekerId
     });
 
     await application.save();
 
-    res.status(201).json({ message: "Job applied successfully" });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    res.json({ success: true, message: 'Applied successfully!' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// NEW: Get applied jobs for current seeker
+exports.getAppliedJobs = async (req, res) => {
+  try {
+    const seekerId = req.user.id;
+
+    const applications = await Application.find({ seekerId })
+      .populate('jobId')  // job details laayega
+      .sort({ appliedAt: -1 });
+
+    res.json({ success: true, applications });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Failed to load applied jobs' });
   }
 };
