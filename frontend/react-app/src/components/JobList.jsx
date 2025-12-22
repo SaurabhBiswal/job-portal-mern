@@ -2,60 +2,57 @@ export default function JobList({
   jobs,
   onApply,
   appliedJobs = [],
-  hideApply,
+  hideApply = false,
 }) {
-  if (jobs.length === 0)
+  if (!jobs || jobs.length === 0) {
     return (
-      <div className="bg-white border rounded-xl p-8 text-center text-slate-500">
+      <div style={{ padding: "20px", color: "gray" }}>
         No jobs found.
       </div>
     );
+  }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       {jobs.map((job) => {
-        const applied = appliedJobs.find(
-          (j) => j.id === job.id
+        const alreadyApplied = appliedJobs.some(
+          (j) => j._id === job._id
         );
 
         return (
           <div
-            key={job.id}
-            className="bg-white rounded-xl border shadow-sm p-5"
+            key={job._id}
+            style={{
+              border: "1px solid #ccc",
+              padding: "16px",
+              borderRadius: "6px",
+            }}
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-lg font-semibold">
-                  {job.title}
-                </h3>
-                <p className="text-slate-600">
-                  {job.company}
-                </p>
-              </div>
-              <span className="text-xs bg-slate-100 px-2 py-1 rounded-full">
-                {job.type}
-              </span>
-            </div>
-
-            <p className="text-sm text-slate-500 mt-2">
-              📍 {job.location}
+            <h3>{job.title}</h3>
+            <p>{job.company}</p>
+            <p>
+              {job.location} • {job.type}
             </p>
-
-            <p className="text-blue-600 font-medium mt-2">
-              {job.salary}
-            </p>
+            <p>{job.salary}</p>
 
             {!hideApply && (
               <button
-                disabled={applied}
                 onClick={() => onApply(job)}
-                className={`mt-4 w-full py-2 rounded-lg text-white ${
-                  applied
-                    ? "bg-gray-400"
-                    : "bg-green-600"
-                }`}
+                disabled={alreadyApplied}
+                style={{
+                  marginTop: "10px",
+                  padding: "8px 16px",
+                  backgroundColor: alreadyApplied
+                    ? "gray"
+                    : "green",
+                  color: "white",
+                  border: "none",
+                  cursor: alreadyApplied
+                    ? "not-allowed"
+                    : "pointer",
+                }}
               >
-                {applied ? "Applied" : "Apply"}
+                {alreadyApplied ? "Applied" : "Apply"}
               </button>
             )}
           </div>
@@ -64,6 +61,10 @@ export default function JobList({
     </div>
   );
 }
+
+
+
+
 
 
 
