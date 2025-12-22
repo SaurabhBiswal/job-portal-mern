@@ -1,22 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { getJobs, applyJob } from '../services/api';
+import api from '../services/api';
 
 const JobList = () => {
   const [jobs, setJobs] = useState([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const [appliedJobIds, setAppliedJobIds] = useState([]); // Track applied jobs
+  const [appliedJobIds, setAppliedJobIds] = useState([]);
+  const [resumeFiles, setResumeFiles] = useState({});
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const res = await getJobs();
-        const jobList = res.data.jobs || res.data || [];
-        setJobs(jobList);
-
-        // Optional: Fetch applied jobs to disable buttons (later improve)
+        const res = await api.get('/jobs');
+        setJobs(res.data.jobs || res.data || []);
       } catch (err) {
-        setMessage('Failed to load jobs. Check if backend is running.');
+        setMessage('Failed to load jobs');
       } finally {
         setLoading(false);
       }
@@ -25,107 +23,74 @@ const JobList = () => {
   }, []);
 
   const handleApply = async (jobId) => {
-    try {
-      const res = await applyJob(jobId);
-      setMessage(res.data.message || 'Applied successfully!');
-      setAppliedJobIds([...appliedJobIds, jobId]); // Disable button
-    } catch (err) {
-      setMessage(err.response?.data?.message || 'Error applying to job');
+    const resumeFile = resumeFiles[jobId];
+
+    if (!resumeFile) {
+      setMessage('Please select a PDF resume!');
+      setTimeout(() => setMessage(''), 4000);
+      return;
     }
 
-    // Clear message after 4 seconds
+    const formData = new FormData();
+    formData.append('jobId', jobId);
+    formData.append('resume', resumeFile);
+
+    try {
+      const res = await api.post('/applications/apply', formData);
+      setMessage(res.data.message);
+      setAppliedJobIds([...appliedJobIds, jobId]);
+      setResumeFiles({ ...resumeFiles, [jobId]: null });
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Apply failed');
+    }
+
     setTimeout(() => setMessage(''), 4000);
   };
 
-  if (loading) {
-    return (
-      <div style={{ padding: '100px', textAlign: 'center' }}>
-        <h2>Loading jobs...</h2>
-      </div>
-    );
-  }
+  if (loading) return <p style={{ textAlign: 'center', padding: '100px' }}>Loading jobs...</p>;
 
   return (
     <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Available Jobs</h1>
+      <h1 style={{ textAlign: 'center' }}>Available Jobs</h1>
 
-      {/* View Applied Jobs Button */}
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <a
-          href="/applied-jobs"
-          style={{
-            padding: '14px 30px',
-            background: '#28a745',
-            color: 'white',
-            textDecoration: 'none',
-            borderRadius: '8px',
-            fontSize: '18px',
-            fontWeight: 'bold'
-          }}
-        >
+      <div style={{ textAlign: 'center', margin: '30px 0' }}>
+        <a href="/applied-jobs" style={{ padding: '12px 24px', background: '#28a745', color: 'white', textDecoration: 'none', borderRadius: '8px' }}>
           View My Applied Jobs
         </a>
       </div>
 
-      {/* Message */}
-      {message && (
-        <p
-          style={{
-            textAlign: 'center',
-            fontSize: '1.2rem',
-            fontWeight: 'bold',
-            color: message.includes('success') || message.includes('Applied') ? 'green' : 'red',
-            marginBottom: '30px'
-          }}
-        >
-          {message}
-        </p>
-      )}
+      {message && <p style={{ textAlign: 'center', color: message.includes('success') ? 'green' : 'red', fontWeight: 'bold' }}>{message}</p>}
 
-      {/* Jobs List */}
       {jobs.length === 0 ? (
-        <p style={{ textAlign: 'center', fontSize: '1.5rem', color: '#666' }}>
-          No jobs posted yet. Ask an employer to post some jobs! 😊
-        </p>
+        <p style={{ textAlign: 'center' }}>No jobs available</p>
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-            gap: '30px'
-          }}
-        >
-          {jobs.map((job) => (
-            <div
-              key={job._id}
-              style={{
-                border: '1px solid #ddd',
-                padding: '30px',
-                borderRadius: '12px',
-                background: 'white',
-                boxShadow: '0 6px 12px rgba(0,0,0,0.1)',
-                textAlign: 'left'
-              }}
-            >
-              <h2 style={{ margin: '0 0 15px 0', color: '#007bff', fontSize: '1.8rem' }}>
-                {job.title}
-              </h2>
-              <p><strong>Company:</strong> {job.company || 'Not specified'}</p>
-              <p><strong>Location:</strong> {job.location || 'Remote'}</p>
-              <p><strong>Description:</strong> {job.description || 'No description available'}</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '30px' }}>
+          {jobs.map(job => (
+            <div key={job._id} style={{ border: '1px solid #ddd', padding: '25px', borderRadius: '12px', background: 'white' }}>
+              <h2>{job.title}</h2>
+              <p><strong>Company:</strong> {job.company}</p>
+              <p><strong>Location:</strong> {job.location}</p>
+              <p>{job.description}</p>
+
+              <div style={{ margin: '20px 0' }}>
+                <label><strong>Upload Resume (PDF):</strong></label>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => setResumeFiles({ ...resumeFiles, [job._id]: e.target.files[0] })}
+                  style={{ display: 'block', marginTop: '10px' }}
+                />
+              </div>
 
               <button
                 onClick={() => handleApply(job._id)}
                 disabled={appliedJobIds.includes(job._id)}
-                style={{
-                  marginTop: '20px',
-                  padding: '12px 30px',
-                  background: appliedJobIds.includes(job._id) ? '#6c757d' : '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '16px',
-                  cursor: appliedJobIds.includes(job._id) ? 'not-allowed' : 'pointer'
+                style={{ 
+                  padding: '12px', 
+                  background: appliedJobIds.includes(job._id) ? '#6c757d' : '#28a745', 
+                  color: 'white', 
+                  border: 'none', 
+                  width: '100%' 
                 }}
               >
                 {appliedJobIds.includes(job._id) ? 'Already Applied' : 'Apply Now'}

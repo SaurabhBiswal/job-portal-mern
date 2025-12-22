@@ -3,12 +3,14 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(cors());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // resume serve karne ke liye
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
@@ -19,8 +21,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/jobs', require('./routes/jobRoutes'));
 app.use('/api/applications', require('./routes/applicationRoutes'));
-
-// Port
+app.use('/api/applications', require('./routes/application'));
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
