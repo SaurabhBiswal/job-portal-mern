@@ -1,21 +1,11 @@
 const express = require("express");
-const Job = require("../models/Job");
-
 const router = express.Router();
+const { authMiddleware, isEmployer } = require("../middlewares/authMiddleware");
+const { getEmployerJobs } = require("../controllers/jobController");
 
-// GET all jobs
-router.get("/", async (req, res) => {
-  const jobs = await Job.find().sort({ createdAt: -1 });
-  res.json(jobs);
-});
-
-// POST a job
-router.post("/", async (req, res) => {
-  const job = new Job(req.body);
-  const savedJob = await job.save();
-  res.json(savedJob);
-});
+router.get("/employer", authMiddleware, isEmployer, getEmployerJobs);
 
 module.exports = router;
+
 
 

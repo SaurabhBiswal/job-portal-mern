@@ -1,21 +1,29 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
-import JobList from './pages/JobList';
-import AppliedJobs from './pages/AppliedJobs';
-import EmployerDashboard from './pages/EmployerDashboard';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-const App = () => {
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import RegisterRole from "./pages/RegisterRole";
+import JobsList from "./pages/JobsList";
+import EmployerDashboard from "./pages/EmployerDashboard";
+
+function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/jobs" element={<JobList />} />
-        <Route path="/applied-jobs" element={<AppliedJobs />} />
+
+        {/* Registration */}
+        <Route path="/register" element={<RegisterRole />} />
+        <Route path="/register/:role" element={<Register />} />
+
+        {/* Dashboards */}
+        <Route path="/jobs" element={<JobsList />} />
         <Route path="/employer-dashboard" element={<EmployerDashboard />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
-};
+}
 
 export default App;
+
+

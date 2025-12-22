@@ -1,13 +1,20 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const applicationSchema = new mongoose.Schema({
-  jobId: { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true },
-  seekerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  resume: { type: String }, // path to uploaded resume
-  appliedAt: { type: Date, default: Date.now },
-  status: { type: String, default: 'pending' }
+  job: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Job"
+  },
+  applicant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
+  status: {
+    type: String,
+    default: "Applied"
+  }
 });
 
-module.exports = mongoose.model('Application', applicationSchema);
+module.exports = mongoose.model("Application", applicationSchema);
 
 

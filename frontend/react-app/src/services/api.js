@@ -1,23 +1,30 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_URL = 'http://localhost:5000/api';
-
-const api = axios.create({
-  baseURL: API_URL,
+const API = axios.create({
+  baseURL: "http://localhost:5000/api"
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+// attach token automatically
+API.interceptors.request.use((req) => {
+  const token = localStorage.getItem("token");
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    req.headers.Authorization = `Bearer ${token}`;
   }
-  return config;
+  return req;
 });
 
-export const login = (email, password) => api.post('/auth/login', { email, password });
-export const register = (name, email, password, role) => api.post('/auth/register', { name, email, password, role });
-export const getJobs = () => api.get('/jobs');
-export const applyJob = (jobId) => api.post('/applications/apply', { jobId });
-export const getAppliedJobs = () => api.get('/applications/my-applications');
-export const postJob = (jobData) => api.post('/jobs/post', jobData);
-export default api;
+// AUTH
+export const login = (email, password) =>
+  API.post("/auth/login", { email, password });
+
+export const register = (data) =>
+  API.post("/auth/register", data);
+
+// JOBS
+export const getAllJobs = () => API.get("/jobs");
+export const getEmployerJobs = () => API.get("/jobs/employer");
+
+// APPLICATIONS
+export const applyJob = (formData) =>
+  API.post("/applications/apply", formData);
+
