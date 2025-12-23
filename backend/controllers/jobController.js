@@ -1,23 +1,33 @@
-const Job = require("../models/Job");
-const Application = require("../models/Application");
+import { catchAsyncErrors } from "../middlewares/catchAsyncErrors.js";
+import ErrorHandler from "../middlewares/error.js";
+import { Job } from "../models/Job.js"; // Ye line ab match karegi
 
-// GET employer's jobs with applicants count
-exports.getEmployerJobs = async (req, res) => {
-  try {
-    const jobs = await Job.find({ createdBy: req.user.id });
+export const getAllJobs = catchAsyncErrors(async (req, res, next) => {
+  const jobs = await Job.find({ expired: false });
+  res.status(200).json({
+    success: true,
+    jobs,
+  });
+});
 
-    const jobsWithApplicants = await Promise.all(
-      jobs.map(async (job) => {
-        const count = await Application.countDocuments({ job: job._id });
-        return {
-          ...job._doc,
-          applicantsCount: count
-        };
-      })
-    );
-
-    res.status(200).json(jobsWithApplicants);
-  } catch (err) {
-    res.status(500).json({ message: "Failed to fetch employer jobs" });
+export const postJob = catchAsyncErrors(async (req, res, next) => {
+  const { role } = req.user;
+  if (role === "jobseeker") {
+    return next(new ErrorHandler("Job Seeker not allowed to post jobs!", 400));
   }
-};
+  const { title, description, category, country, city, location, fixedSalary, salaryFrom, salaryTo } = req.body;
+
+  if (!title || !description || !category || !country || !city || !location) {
+    return next(new ErrorHandler("Please provide full job details.", 400));
+  }
+
+  const postedBy = req.user._id;
+  const job = await Job.create({
+    title, description, category, country, city, location, fixedSalary, salaryFrom, salaryTo, postedBy
+  });
+  res.status(200).json({
+    success: true,
+    message: "Job Posted Successfully!",
+    job,
+  });
+});

@@ -9,49 +9,47 @@ export default function LoginCard({ role, title }) {
 
   const handleLogin = async () => {
     try {
-      const res = await api.post("/auth/login", {
-        email,
-        password,
-        role
-      });
+      // API call with lowercase role
+      const res = await api.post("/user/login", { email, password, role });
 
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user)); 
+      localStorage.setItem("role", res.data.user.role);
 
-      if (role === "employer") {
+      alert(res.data.message);
+
+      // Final redirect logic using lowercase roles
+      if (res.data.user.role === "employer") {
         navigate("/employer/dashboard");
       } else {
         navigate("/jobseeker/dashboard");
       }
     } catch (e) {
-      alert("Login failed");
-      console.log(e?.response?.data || e.message);
+      alert(e.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow w-80">
-      <h2 className="text-xl mb-4 text-center">{title}</h2>
-
+    <div className="bg-white p-8 rounded-lg shadow-xl w-96 border border-gray-200">
+      <h2 className="text-2xl font-bold mb-6 text-center text-blue-700">{title}</h2>
       <input
-        className="border w-full p-2 mb-2"
-        placeholder="Email"
+        className="border w-full p-3 mb-4 rounded focus:outline-blue-500"
+        placeholder="Email Address"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-
       <input
-        className="border w-full p-2 mb-4"
+        className="border w-full p-3 mb-6 rounded focus:outline-blue-500"
         type="password"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-
       <button
-        className="bg-blue-600 text-white w-full p-2"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold w-full p-3 rounded transition duration-200"
         onClick={handleLogin}
       >
-        Login
+        Login as {role}
       </button>
     </div>
   );
