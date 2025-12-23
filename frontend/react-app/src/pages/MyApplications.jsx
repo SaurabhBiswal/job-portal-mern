@@ -1,32 +1,38 @@
-// MyApplications.jsx
-import { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 
-export default function MyApplications() {
-  const [apps, setApps] = useState([]);
-  const email = localStorage.getItem("email"); // must store email on login
+const MyApplications = () => {
+  const [applications, setApplications] = useState([]);
 
   useEffect(() => {
-    if (!email) return;
-    fetchMyApplications();
-  }, [email]);
-
-  const fetchMyApplications = async () => {
-    const res = await axios.get(`http://localhost:5000/api/my-applications/${email}`);
-    setApps(res.data); // each app has .jobId populated
-  };
+    const fetchApps = async () => {
+      try {
+        const { data } = await api.get("/api/v1/application/jobseeker/getall");
+        setApplications(data.applications);
+      } catch (err) {
+        toast.error("Failed to fetch applications");
+      }
+    };
+    fetchApps();
+  }, []);
 
   return (
-    <div>
-      <h2>My Applications</h2>
-      {apps.length === 0 && <p>No applications yet.</p>}
-      {apps.map(app => (
-        <div key={app._id} style={{ border: "1px solid #ddd", padding: 12, margin: 8 }}>
-          <h3>{app.jobId?.title}</h3>
-          <p>{app.jobId?.company}</p>
-          <p>Status: <strong>{app.status}</strong></p>
-        </div>
-      ))}
+    <div className="p-10 max-w-5xl mx-auto">
+      <h1 className="text-3xl font-black mb-8">My Applied Jobs</h1>
+      <div className="grid gap-4">
+        {applications.map((app) => (
+          <div key={app._id} className="p-6 bg-white border rounded-2xl shadow flex justify-between">
+            <div>
+              <h3 className="font-bold text-xl">{app.jobId?.title || "Job Title"}</h3>
+              <p className="text-gray-500">Status: {app.status}</p>
+            </div>
+            <span className="text-blue-900 font-bold">{app.name}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
-}
+};
+
+export default MyApplications;

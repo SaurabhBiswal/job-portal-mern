@@ -1,26 +1,62 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 
-const EmployerDashboard = ({ user }) => {
+const EmployerDashboard = () => {
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const { data } = await api.get("/application/employer/getall");
+        setApplications(data.applications);
+        setLoading(false);
+      } catch (err) {
+        toast.error("Could not fetch applications");
+        setLoading(false);
+      }
+    };
+    fetchApplications();
+  }, []);
+
+  if (loading) return <div className="p-20 text-center font-bold">Loading Applications...</div>;
+
   return (
-    <div className="p-10 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-10 text-gray-800">Employer Portal 🏢</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        <Link to="/job/post" className="p-10 bg-blue-900 text-white rounded-3xl shadow-2xl hover:bg-black transition-all group">
-          <h2 className="text-2xl font-bold">Post a New Job</h2>
-          <p className="mt-2 opacity-70">Create listings to find best talent.</p>
-          <div className="mt-6 font-black group-hover:translate-x-2 transition-transform">GO →</div>
-        </Link>
-
-        <Link to="/employer/applications" className="p-10 bg-white border-2 border-gray-100 rounded-3xl shadow-xl hover:border-blue-500 transition-all group">
-          <h2 className="text-2xl font-bold text-blue-900">View Applications</h2>
-          <p className="mt-2 text-gray-400">Manage candidates who applied for your jobs.</p>
-          <div className="mt-6 font-black text-blue-900 group-hover:translate-x-2 transition-transform">GO →</div>
-        </Link>
-
-      </div>
+    <div className="min-h-screen bg-gray-50 p-10">
+      <h1 className="text-4xl font-black mb-10 text-gray-800">Applications Received</h1>
+      
+      {applications.length === 0 ? (
+        <div className="bg-white p-10 rounded-2xl shadow text-center text-gray-500">
+          No applications received yet.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {applications.map((app) => (
+            <div key={app._id} className="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-blue-900 mb-2">{app.name}</h3>
+                <p className="text-gray-600 mb-1"><strong>Applied For:</strong> {app.jobId?.title || "N/A"}</p>
+                <p className="text-gray-600 mb-1"><strong>Email:</strong> {app.email}</p>
+                <p className="text-gray-600 mb-1"><strong>Phone:</strong> {app.phone}</p>
+              </div>
+              
+              <div className="mt-6 border-t pt-4">
+                <a 
+                  href={app.resume.url} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="block text-center bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition"
+                >
+                  View Resume
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
-export default EmployerDashboard;
+
+export default EmployerDashboard;;
