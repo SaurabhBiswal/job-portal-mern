@@ -1,42 +1,26 @@
-// EmployerDashboard.jsx
-import { useEffect, useState } from "react";
-import axios from "axios";
+import React from "react";
+import { Link } from "react-router-dom";
 
-export default function EmployerDashboard() {
-  const [apps, setApps] = useState([]);
-
-  useEffect(() => {
-    fetchApplications();
-  }, []);
-
-  const fetchApplications = async () => {
-    const res = await axios.get("http://localhost:5000/api/applications");
-    setApps(res.data); // res.data is array of { _id, jobId, email, status }
-  };
-
-  const updateStatus = async (id, status) => {
-    await axios.patch(`http://localhost:5000/api/applications/${id}`, { status });
-    // Update local UI immediately
-    setApps(prev => prev.map(a => (a._id === id ? { ...a, status } : a)));
-  };
-
+const EmployerDashboard = ({ user }) => {
   return (
-    <div>
-      <h2>Employer Dashboard</h2>
-      {apps.map(app => (
-        <div key={app._id} style={{ border: "1px solid #ddd", padding: 12, margin: 8 }}>
-          <h3>{app.jobId?.title}</h3>
-          <p>{app.jobId?.company}</p>
-          <p>Applicant: {app.email}</p>
-          <p>Status: <strong>{app.status}</strong></p>
+    <div className="p-10 bg-gray-50 min-h-screen">
+      <h1 className="text-3xl font-bold mb-10 text-gray-800">Employer Portal 🏢</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <Link to="/job/post" className="p-10 bg-blue-900 text-white rounded-3xl shadow-2xl hover:bg-black transition-all group">
+          <h2 className="text-2xl font-bold">Post a New Job</h2>
+          <p className="mt-2 opacity-70">Create listings to find best talent.</p>
+          <div className="mt-6 font-black group-hover:translate-x-2 transition-transform">GO →</div>
+        </Link>
 
-          <div style={{ marginTop: 8 }}>
-            <button onClick={() => updateStatus(app._id, "shortlisted")}>Shortlist</button>
-            <button onClick={() => updateStatus(app._id, "rejected")} style={{ marginLeft: 8 }}>Reject</button>
-          </div>
-        </div>
-      ))}
+        <Link to="/employer/applications" className="p-10 bg-white border-2 border-gray-100 rounded-3xl shadow-xl hover:border-blue-500 transition-all group">
+          <h2 className="text-2xl font-bold text-blue-900">View Applications</h2>
+          <p className="mt-2 text-gray-400">Manage candidates who applied for your jobs.</p>
+          <div className="mt-6 font-black text-blue-900 group-hover:translate-x-2 transition-transform">GO →</div>
+        </Link>
+
+      </div>
     </div>
   );
-}
-
+};
+export default EmployerDashboard;
