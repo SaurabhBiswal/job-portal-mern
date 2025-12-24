@@ -1,11 +1,14 @@
 import express from "express";
-import { login, register, logout, getUser } from "../controllers/userController.js";
-import { isAuthenticated } from "../middlewares/auth.js";
-
 const router = express.Router();
 
+import { register, login, logout, getUser } from "../controllers/userController.js";
+import { isAuthenticated } from "../middlewares/auth.js";
+
+// Register & Login routes
 router.post("/register", register);
 router.post("/login", login);
+
+// Protected routes
 router.get("/logout", isAuthenticated, logout);
 router.get("/getuser", isAuthenticated, getUser);
 

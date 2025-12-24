@@ -11,7 +11,7 @@ import userRouter from "./routes/userRouter.js";
 import jobRouter from "./routes/jobRoutes.js";
 import applicationRouter from "./routes/applicationRoutes.js";
 import { errorMiddleware } from "./middlewares/error.js";
-
+import authRouter from "./routes/authRoutes.js"; // Auth route add kiya
 const app = express();
 dotenv.config();
 
@@ -53,7 +53,7 @@ mongoose
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/job", jobRouter);
 app.use("/api/v1/application", applicationRouter);
-
+app.use("/api/v1/auth", authRouter); // Auth route connect kiya
 // Global Error Middleware
 app.use(errorMiddleware);
 

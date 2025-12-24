@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
-    enum: ["jobseeker", "employer"], 
+    enum: ["jobseeker", "employer"],
   },
   createdAt: {
     type: Date,
@@ -53,4 +53,5 @@ userSchema.methods.getJWTToken = function () {
   });
 };
 
+// Export as User model
 export const User = mongoose.model("User", userSchema);
