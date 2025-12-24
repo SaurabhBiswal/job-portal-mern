@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Job Listing Portal</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eef2f7;
+}
+.container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 80px;
+}
+.card {
+    background: white;
+    padding: 30px;
+    width: 320px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+h2 { margin-bottom: 5px; }
+p { color: gray; margin-top: 0; }
+input, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+}
+button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+hr { margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- EMPLOYER -->
+<div class="card">
+    <h2>Employer Login</h2>
+    <p>Post jobs & manage applicants</p>
+
+    <input id="empLoginUser" placeholder="Employer Username">
+    <input id="empLoginPass" type="password" placeholder="Password">
+    <button onclick="loginEmployer()">Login as Employer</button>
+
+    <hr>
+
+    <input id="empRegUser" placeholder="New Employer Username">
+    <input id="empRegPass" type="password" placeholder="Password">
+    <button onclick="registerEmployer()">Register Employer</button>
+</div>
+
+<!-- JOB SEEKER -->
+<div class="card">
+    <h2>Job Seeker Login</h2>
+    <p>Apply & track jobs</p>
+
+    <input id="jsLoginUser" placeholder="Job Seeker Username">
+    <input id="jsLoginPass" type="password" placeholder="Password">
+    <button onclick="loginJobSeeker()">Login as Job Seeker</button>
+
+    <hr>
+
+    <input id="jsRegUser" placeholder="New Job Seeker Username">
+    <input id="jsRegPass" type="password" placeholder="Password">
+    <button onclick="registerJobSeeker()">Register Job Seeker</button>
+</div>
+
+</div>
+
+<script>
+/* AUTO SEED */
+if (!localStorage.getItem("employers")) {
+    localStorage.setItem("employers", JSON.stringify({ "emp123": "123" }));
+}
+
+/* EMPLOYER */
+function registerEmployer() {
+    const u = empRegUser.value;
+    const p = empRegPass.value;
+    const emp = JSON.parse(localStorage.getItem("employers")) || {};
+    emp[u] = p;
+    localStorage.setItem("employers", JSON.stringify(emp));
+    alert("Employer registered");
+}
+
+function loginEmployer() {
+    const u = empLoginUser.value;
+    const p = empLoginPass.value;
+    const emp = JSON.parse(localStorage.getItem("employers")) || {};
+    if (emp[u] === p) {
+        localStorage.setItem("role", "employer");
+        localStorage.setItem("username", u);
+        window.location.href = "dashboard-employer.html";
+    } else {
+        alert("Invalid employer credentials");
+    }
+}
+
+/* JOB SEEKER */
+function registerJobSeeker() {
+    const u = jsRegUser.value;
+    const p = jsRegPass.value;
+    const seekers = JSON.parse(localStorage.getItem("jobseekers")) || {};
+    seekers[u] = p;
+    localStorage.setItem("jobseekers", JSON.stringify(seekers));
+    alert("Job seeker registered");
+}
+
+function loginJobSeeker() {
+    const u = jsLoginUser.value;
+    const p = jsLoginPass.value;
+    const seekers = JSON.parse(localStorage.getItem("jobseekers")) || {};
+    if (seekers[u] === p) {
+        localStorage.setItem("role", "jobseeker");
+        localStorage.setItem("username", u);
+        window.location.href = "dashboard-jobseeker.html"; // 🔥 FIX HERE
+    } else {
+        alert("Invalid job seeker credentials");
+    }
+}
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+

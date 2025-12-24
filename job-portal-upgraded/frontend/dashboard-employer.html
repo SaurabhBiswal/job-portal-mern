@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Employer Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+    }
+
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logout-btn {
+      padding: 6px 16px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #16a34a;
+      color: white;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h2>Employer Dashboard</h2>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h3>Applicants (Resume Status)</h3>
+    <div id="applicants"></div>
+  </div>
+
+</div>
+
+<script>
+if (localStorage.getItem("role") !== "employer") {
+  window.location.href = "index.html";
+}
+
+let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+let applications = JSON.parse(localStorage.getItem("applications")) || [];
+
+function renderApplicants() {
+  applicants.innerHTML = "";
+
+  if (applications.length === 0) {
+    applicants.innerHTML = "<p>No applications yet.</p>";
+    return;
+  }
+
+  applications.forEach(a => {
+    const job = jobs.find(j => j.id === a.jobId);
+    if (!job) return;
+
+    applicants.innerHTML += `
+      <div class="card">
+        <strong>${job.title}</strong><br>
+        👤 ${a.seeker}<br>
+        <span class="badge">Resume Available</span><br>
+        📄 ${a.resumeName}
+      </div>
+    `;
+  });
+}
+
+function logout() {
+  localStorage.removeItem("role");
+  localStorage.removeItem("username");
+  window.location.href = "index.html";
+}
+
+renderApplicants();
+</script>
+
+</body>
+</html>
+
+
+
+

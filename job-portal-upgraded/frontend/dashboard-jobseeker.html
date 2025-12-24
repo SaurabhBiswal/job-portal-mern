@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Job Seeker Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+    }
+
+    /* HEADER */
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logout-btn {
+      width: auto !important;
+      padding: 6px 16px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* LAYOUT */
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 2fr 1.5fr;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    h3 {
+      margin-top: 0;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .search-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .clear-btn {
+      background: #e5e7eb;
+      border: none;
+      cursor: pointer;
+    }
+
+    .job {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 10px 0;
+    }
+
+    .apply-btn {
+      background: #16a34a;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+
+    .applied {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .resume-label {
+      font-size: 13px;
+      color: #374151;
+      margin-top: 6px;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h2>Job Seeker Dashboard</h2>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</header>
+
+<div class="container">
+
+  <!-- PROFILE -->
+  <div class="card">
+    <h3>Welcome, <span id="username"></span></h3>
+    <p>Track jobs, apply smartly 🚀</p>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="card">
+    <h3>Search Jobs</h3>
+    <input type="text" id="keyword" placeholder="Search by title / skill" />
+    <select id="locationFilter"></select>
+    <select id="typeFilter"></select>
+    <button class="search-btn" onclick="applyFilters()">Search Jobs</button>
+    <button class="clear-btn" onclick="clearFilters()">Clear Filters</button>
+  </div>
+
+  <!-- AVAILABLE JOBS -->
+  <div class="card">
+    <h3>Available Jobs</h3>
+    <div id="jobList"></div>
+  </div>
+
+  <!-- APPLIED JOBS -->
+  <div class="card">
+    <h3>Applied Jobs</h3>
+    <div id="appliedJobs"></div>
+  </div>
+
+</div>
+
+<script>
+/* AUTH CHECK */
+const role = localStorage.getItem("role");
+if (role !== "jobseeker") {
+  window.location.href = "index.html";
+}
+
+const username = localStorage.getItem("username") || "User";
+document.getElementById("username").innerText = username;
+
+/* DATA */
+let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+let applications = JSON.parse(localStorage.getItem("applications")) || [];
+
+/* FILTER DROPDOWNS (DYNAMIC) */
+function populateFilters() {
+  const locationSet = new Set();
+  const typeSet = new Set();
+
+  jobs.forEach(j => {
+    locationSet.add(j.location);
+    typeSet.add(j.type);
+  });
+
+  locationFilter.innerHTML = `<option value="">All Locations</option>`;
+  typeFilter.innerHTML = `<option value="">All Job Types</option>`;
+
+  locationSet.forEach(l =>
+    locationFilter.innerHTML += `<option value="${l}">${l}</option>`
+  );
+  typeSet.forEach(t =>
+    typeFilter.innerHTML += `<option value="${t}">${t}</option>`
+  );
+}
+
+/* RENDER JOBS */
+function renderJobs(list) {
+  jobList.innerHTML = "";
+
+  list.forEach(job => {
+    const applied = applications.some(
+      a => a.jobId === job.id && a.seeker === username
+    );
+
+    jobList.innerHTML += `
+      <div class="job">
+        <strong>${job.title}</strong> (${job.type})<br>
+        📍 ${job.location} | 💰 ${job.salary}<br>
+        <small>${job.description}</small><br>
+
+        ${
+          applied
+            ? `<button class="apply-btn applied" disabled>Applied</button>`
+            : `
+              <label class="resume-label">Upload Resume (PDF only)</label>
+              <input type="file" id="resume-${job.id}" accept="application/pdf">
+              <button class="apply-btn" onclick="applyJob(${job.id})">Apply</button>
+            `
+        }
+      </div>
+    `;
+  });
+}
+
+/* APPLY JOB WITH RESUME */
+function applyJob(jobId) {
+  const fileInput = document.getElementById(`resume-${jobId}`);
+  if (!fileInput || !fileInput.files.length) {
+    alert("Please upload your resume (PDF)");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  if (file.type !== "application/pdf") {
+    alert("Only PDF resumes are allowed");
+    return;
+  }
+
+  applications.push({
+    jobId: jobId,
+    seeker: username,
+    resumeName: file.name
+  });
+
+  localStorage.setItem("applications", JSON.stringify(applications));
+  renderJobs(jobs);
+  renderApplied();
+}
+
+/* APPLIED JOBS LIST */
+function renderApplied() {
+  appliedJobs.innerHTML = "";
+
+  applications
+    .filter(a => a.seeker === username)
+    .forEach(a => {
+      const job = jobs.find(j => j.id === a.jobId);
+      if (!job) return;
+
+      appliedJobs.innerHTML += `
+        <div class="job">
+          <strong>${job.title}</strong><br>
+          📍 ${job.location} | 💰 ${job.salary}<br>
+          📄 Resume: ${a.resumeName}
+        </div>
+      `;
+    });
+}
+
+/* FILTER LOGIC */
+function applyFilters() {
+  const k = keyword.value.toLowerCase();
+  const loc = locationFilter.value;
+  const type = typeFilter.value;
+
+  const filtered = jobs.filter(j =>
+    (!k || j.title.toLowerCase().includes(k) || j.description.toLowerCase().includes(k)) &&
+    (!loc || j.location === loc) &&
+    (!type || j.type === type)
+  );
+
+  renderJobs(filtered);
+}
+
+function clearFilters() {
+  keyword.value = "";
+  locationFilter.value = "";
+  typeFilter.value = "";
+  renderJobs(jobs);
+}
+
+/* LOGOUT */
+function logout() {
+  localStorage.removeItem("role");
+  localStorage.removeItem("username");
+  window.location.href = "index.html";
+}
+
+/* INIT */
+populateFilters();
+renderJobs(jobs);
+renderApplied();
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
